@@ -311,8 +311,6 @@ public class PEOutMessagePacket implements PacketListener {
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
-        System.out.println(event.getPacketType());
-
         if (!PACKET_HANDLERS.containsKey(event.getPacketType())) return;
 
         handlePacketSending(event);
@@ -420,7 +418,7 @@ public class PEOutMessagePacket implements PacketListener {
 
             if (sender.isPresent() && !sender.get().isLocal()) {
                 if (isFiltered) {
-                    Bukkit.getScheduler().runTaskLaterAsynchronously(InteractiveChat.plugin, () -> {
+                    Bukkit.getRegionScheduler().runDelayed(InteractiveChat.plugin, receiver.getLocation(), task -> {
                         SERVICE.execute(() -> {
                             processPacket(receiver, determinedSender, event, messageUUID, false, packetHandler, originalEvent);
                         }, receiver, messageUUID);
@@ -519,10 +517,10 @@ public class PEOutMessagePacket implements PacketListener {
             PreChatPacketSendEvent sendEvent = new PreChatPacketSendEvent(true, receiver, packet, component, postEventSenderUUID, originalWrapper, InteractiveChat.sendOriginalIfTooLong, longerThanMaxLength);
             Bukkit.getPluginManager().callEvent(sendEvent);
 
-            Bukkit.getScheduler().runTaskLater(InteractiveChat.plugin, () -> {
+            receiver.getScheduler().runDelayed(InteractiveChat.plugin, task -> {
                 InteractiveChat.keyTime.remove(rawMessageKey);
                 InteractiveChat.keyPlayer.remove(rawMessageKey);
-            }, 10);
+            }, null, 10);
 
             if (sendEvent.isCancelled()) {
                 if (sendEvent.sendOriginalIfCancelled()) {
